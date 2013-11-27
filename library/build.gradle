@@ -1,0 +1,52 @@
+apply plugin: 'android-library'
+apply plugin: 'maven'
+
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath 'com.android.tools.build:gradle:+'
+	}
+}
+
+// nexus-server should be defined in /etc/hosts
+def server = 'nexus-server'
+def URL = "http://${server}:8081/nexus/content"
+
+repositories {
+	maven {
+		url "${URL}/groups/public"
+	}
+	maven {
+		url "${URL}/repositories/android/"
+	}
+}
+
+dependencies {
+	compile 'com.android.support:support-v4:19.0.0'
+}
+
+android {
+	compileSdkVersion 19
+	buildToolsVersion '17'
+}
+
+if (hasProperty("xlint")) {
+	tasks.withType(Compile) {
+		options.compilerArgs << "-Xlint"
+	}
+}
+
+// it's assumed our local nexus repo is hosting a repository called 'android'
+uploadArchives {
+	repositories {
+		mavenDeployer {
+			repository(url: "${URL}/repositories/android/") {
+				pom.version = '2.4.1'
+				pom.groupId = 'com.viewpagerindicator'
+				authentication(userName: "deployment", password: "deployment123")
+			}
+		}
+	}
+}
